@@ -37,7 +37,7 @@ const BookList: React.FC = () => {
   return (
     <div className="booklist-root">
       <div className="booklist-header">
-        <h2>绘本馆</h2>
+        <h2>中文绘本馆</h2>
         <div className="booklist-actions">
           <select value={filter} onChange={(e)=>{ setFilter(e.target.value); setPage(1); }}>
             {categories.map((c) => (
