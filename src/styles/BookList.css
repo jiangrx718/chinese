@@ -13,9 +13,11 @@
 .booklist-header h2 { margin:0; }
 .booklist-actions select { padding:6px 8px; border-radius:6px; }
 .booklist-grid {
-  display:grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  display: grid;
+  /* always show 3 columns on desktop */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
+  justify-content: center;
 }
 .book-card {
   background:#fff;
@@ -75,13 +77,14 @@
 .booklist-pager span { font-weight:600; color: #333; min-width:60px; text-align:center; }
 
 @media (max-width: 900px) {
-  .booklist-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; }
+  .booklist-grid { grid-template-columns: repeat(3, 1fr); gap: 14px; }
   .book-title { font-size:14px; }
 }
 
 @media (max-width: 600px) {
   .booklist-root { padding: 8px; }
-  .booklist-grid { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
+  /* mobile still 3 columns as requested; make cards smaller */
+  .booklist-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
   .book-card { border-radius: 8px; }
   .book-cover { aspect-ratio: 2 / 3; }
   .book-title { font-size:12px; min-height:36px; }
