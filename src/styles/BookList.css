@@ -14,7 +14,7 @@
 .booklist-actions select { padding:6px 8px; border-radius:6px; }
 .booklist-grid {
   display:grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 16px;
 }
 .book-card {
@@ -75,13 +75,15 @@
 .booklist-pager span { font-weight:600; color: #333; min-width:60px; text-align:center; }
 
 @media (max-width: 900px) {
-  .booklist-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .booklist-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; }
+  .book-title { font-size:14px; }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
   .booklist-root { padding: 8px; }
-  /* mobile: show 3 items per row as requested */
-  .booklist-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .booklist-grid { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
   .book-card { border-radius: 8px; }
   .book-cover { aspect-ratio: 2 / 3; }
+  .book-title { font-size:12px; min-height:36px; }
+  .booklist-pager { padding: 12px 0; margin-top:48px; }
 }
