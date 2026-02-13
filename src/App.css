@@ -83,12 +83,17 @@ body {
 }
 
 .app-content {
-  margin: 24px;
+  /* keep main content centered with generous top and side gutters */
+  margin: 48px auto;
+  max-width: 1200px;
   padding: 24px;
   background: #fff;
-  min-height: calc(100vh - 48px);
-  border-radius: 4px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  min-height: calc(100vh - 96px);
+  border-radius: 8px;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
 }
 
 .page-header {
@@ -188,5 +193,16 @@ body {
 @media screen and (max-width: 768px) {
   .app-content {
     margin-left: 24px;
+  }
+}
+
+/* Mobile: make the main content full-bleed and remove large gutters */
+@media screen and (max-width: 600px) {
+  .app-content {
+    max-width: none;
+    margin: 0; /* full width */
+    padding: 12px;
+    border-radius: 0;
+    box-shadow: none;
   }
 }
