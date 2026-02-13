@@ -1,42 +1,36 @@
 import React, { useEffect, useRef, useState } from 'react';
 import '../styles/Reader.css';
 
+import type { PageItem as DataPageItem } from '../utils/bookData';
 type PageItem = {
-  id: string;
   image?: string;
   audio?: string;
+  path?: string;
 };
 
-const importAll = () => {
-  // Vite: eager import assets from project root 10846 folder
-  const modules = import.meta.glob('/10846/*.{jpg,png,jpeg,webp,mp3}', { eager: true });
-  const images: Record<string, string> = {};
-  const audios: Record<string, string> = {};
+// preload all assets under 10846 (including subfolders)
+const modules = import.meta.glob('/10846/**/*.{jpg,png,jpeg,webp,mp3}', { eager: true });
 
+const importAllForBook = (bookId?: string): PageItem[] => {
+  const images: PageItem[] = [];
   Object.keys(modules).forEach((k) => {
     const m: any = (modules as any)[k];
     const url = m && m.default ? m.default : undefined;
     if (!url) return;
-    const name = k.split('/').pop() || k;
-    const base = name.replace(/\.[^/.]+$/, '');
-    const ext = name.split('.').pop()!.toLowerCase();
-    if (['jpg', 'jpeg', 'png', 'webp'].includes(ext)) images[base + '.' + ext] = url;
-    if (['mp3', 'wav', 'ogg'].includes(ext)) audios[base + '.' + ext] = url;
+    if (bookId) {
+      if (!k.includes(`/${bookId}/`)) return;
+    }
+    const ext = k.split('.').pop()!.toLowerCase();
+    if (['jpg','jpeg','png','webp'].includes(ext)) {
+      images.push({ image: url, path: k });
+    }
   });
-
-  // Build ordered list by filename (natural sort)
-  const allNames = Object.keys(images).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-  const pages: PageItem[] = allNames.map((fname) => {
-    const base = fname.replace(/\.[^/.]+$/, '');
-    // try to find matching audio with same base
-    const audioKey = Object.keys(audios).find((k) => k.startsWith(base));
-    return { id: fname, image: images[fname], audio: audioKey ? audios[audioKey] : undefined };
-  });
-  return pages;
+  images.sort((a,b)=> (a.path||'').localeCompare(b.path||'', undefined, {numeric:true}));
+  return images;
 };
 
-const BookReader: React.FC = () => {
-  const pages = importAll();
+const BookReader: React.FC<{ bookId?: string }> = ({ bookId }) => {
+  const pages = importAllForBook(bookId);
   const [index, setIndex] = useState(0);
   const [autoPlay, setAutoPlay] = useState(true);
   const [rotated, setRotated] = useState(false);

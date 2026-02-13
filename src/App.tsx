@@ -1,9 +1,11 @@
 import { Layout } from 'antd';
 import { HashRouter as Router, Route, Routes } from 'react-router-dom'; // 修改这里：BrowserRouter → HashRouter
-import SideMenu from './components/SideMenu';
+// SideMenu removed - homepage will be full width
 import BookReader from './pages/BookReader';
+import BookList from './pages/BookList';
+import BookDetail from './pages/BookDetail';
 
-const { Content, Sider } = Layout;
+const { Content } = Layout;
 
 function App() {
   return (
@@ -11,16 +13,13 @@ function App() {
       <Layout className="app-container">
         {/* header removed for H5 reader */}
         <Layout className="app-layout">
-          <Sider className="app-sider" width={200}>
-            <SideMenu />
-          </Sider>
-          <Layout>
-            <Content className="app-content">
+          <Content className="app-content">
               <Routes>
-                <Route path="/" element={<BookReader />} />
+                <Route path="/" element={<BookList />} />
+                <Route path="/book/:id" element={<BookDetail />} />
+                <Route path="/reader" element={<BookReader />} />
               </Routes>
             </Content>
-          </Layout>
         </Layout>
       </Layout>
     </Router>

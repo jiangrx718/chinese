@@ -47,19 +47,9 @@ body {
   margin-top: 64px;
 }
 
-.app-sider {
-  background: #4a90e2 !important;  /* 修改为蓝色背景 */
-  min-height: 100vh;
-  position: fixed;
-  left: 0;
-  top: 64px;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
-}
-
-.menu-container {
-  padding: 16px;
-  background: #4a90e2;
-}
+/* sider removed for H5 reader - clear left menu styles */
+.app-sider { display: none !important; }
+.menu-container { display: none !important; }
 
 .menu-item {
   margin: 8px 0;
@@ -93,10 +83,10 @@ body {
 }
 
 .app-content {
-  margin: 24px 24px 24px 224px;
+  margin: 24px;
   padding: 24px;
   background: #fff;
-  min-height: calc(100vh - 112px);
+  min-height: calc(100vh - 48px);
   border-radius: 4px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }

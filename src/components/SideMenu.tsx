@@ -11,7 +11,7 @@ const SideMenu: React.FC = () => {
     {
       key: '/',
       icon: <SyncOutlined />,
-      label: '绘本阅读',
+      label: '首页',
     },
   ];
 
