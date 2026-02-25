@@ -25,6 +25,7 @@ const BookList: React.FC = () => {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState<number | 'all'>('all');
   const [loading, setLoading] = useState(false);
@@ -58,6 +59,7 @@ const BookList: React.FC = () => {
       const data: ApiResponse<{ count: number; list: Book[] }> = await res.json();
       if (data.code === 0) {
         setBooks(data.data.list);
+        setTotalCount(data.data.count);
       }
     } catch (error) {
       console.error('Failed to fetch books:', error);
@@ -71,9 +73,13 @@ const BookList: React.FC = () => {
   };
 
   const goPage = (p: number) => {
+    const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
     if (p < 1) return;
+    if (p > totalPages) return;
     setPage(p);
   };
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
@@ -114,8 +120,8 @@ const BookList: React.FC = () => {
 
           <div className="booklist-pager">
             <button onClick={()=>goPage(page-1)} disabled={page<=1}>上一页</button>
-            <span>{page}</span>
-            <button onClick={()=>goPage(page+1)} disabled={books.length < PAGE_SIZE}>下一页</button>
+            <span>{page} / {totalPages}</span>
+            <button onClick={()=>goPage(page+1)} disabled={page>=totalPages}>下一页</button>
           </div>
         </>
       )}
