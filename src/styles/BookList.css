@@ -75,6 +75,15 @@
   transform: none;
 }
 .booklist-pager span { font-weight:600; color: #333; min-width:60px; text-align:center; }
+.booklist-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  font-size: 16px;
+  color: #666;
+  font-weight: 500;
+}
 
 @media (max-width: 900px) {
   .booklist-grid { grid-template-columns: repeat(3, 1fr); gap: 14px; }

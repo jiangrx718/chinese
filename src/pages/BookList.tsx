@@ -1,37 +1,88 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getBooks } from '../utils/bookData';
 import '../styles/BookList.css';
 
 const PAGE_SIZE = 15;
 
+interface Category {
+  category_id: number;
+  name: string;
+}
+
+interface Book {
+  book_id: string;
+  title: string;
+  icon: string;
+}
+
+interface ApiResponse<T> {
+  code: number;
+  msg: string;
+  data: T;
+}
+
 const BookList: React.FC = () => {
   const navigate = useNavigate();
-  const books = useMemo(() => getBooks(), []);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [books, setBooks] = useState<Book[]>([]);
   const [page, setPage] = useState(1);
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState<number | 'all'>('all');
+  const [loading, setLoading] = useState(false);
 
-  const categories = useMemo(() => {
-    const set = new Set<string>();
-    books.forEach((b) => { if (b.category) set.add(b.category); });
-    return ['全部', ...Array.from(set).sort((a,b)=>a.localeCompare(b, undefined, {numeric:true}))];
-  }, [books]);
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
-  const filtered = books.filter((b) => filter === 'all' || b.category === filter);
-  const total = filtered.length;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  useEffect(() => {
+    fetchBooks();
+  }, [filter, page]);
 
-  const current = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch('http://wechat.58haha.com/api/book/list?type=1');
+      const data: ApiResponse<{ count: number; list: Category[] }> = await res.json();
+      if (data.code === 0) {
+        setCategories(data.data.list);
+      }
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+    }
+  };
+
+  const fetchBooks = async () => {
+    setLoading(true);
+    try {
+      const type = filter === 'all' ? 0 : filter;
+      const offset = (page - 1) * PAGE_SIZE;
+      const res = await fetch(`http://wechat.58haha.com/api/picture/list?type=${type}&limit=${PAGE_SIZE}&offset=${offset}`);
+      const data: ApiResponse<{ count: number; list: Book[] }> = await res.json();
+      if (data.code === 0) {
+        setBooks(data.data.list);
+      }
+    } catch (error) {
+      console.error('Failed to fetch books:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const onClickBook = (id: string) => {
     navigate(`/book/${encodeURIComponent(id)}`);
   };
 
   const goPage = (p: number) => {
-    if (p < 1) p = 1;
-    if (p > totalPages) p = totalPages;
+    if (p < 1) return;
     setPage(p);
-    // switch to first page when filter changes handled elsewhere
+  };
+
+  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    if (value === 'all') {
+      setFilter('all');
+    } else {
+      setFilter(parseInt(value, 10));
+    }
+    setPage(1);
   };
 
   return (
@@ -39,28 +90,35 @@ const BookList: React.FC = () => {
       <div className="booklist-header">
         <h2>中文绘本馆</h2>
         <div className="booklist-actions">
-          <select value={filter} onChange={(e)=>{ setFilter(e.target.value); setPage(1); }}>
+          <select value={filter} onChange={handleFilterChange}>
+            <option value="all">全部</option>
             {categories.map((c) => (
-              <option key={c} value={c === '全部' ? 'all' : c}>{c}</option>
+              <option key={c.category_id} value={c.category_id.toString()}>{c.name}</option>
             ))}
           </select>
         </div>
       </div>
 
-      <div className="booklist-grid">
-        {current.map((b) => (
-          <div className="book-card" key={b.id}>
-            <div className="book-cover" style={{backgroundImage: `url(${b.cover})`}} onClick={() => onClickBook(b.id)} />
-            <div className="book-title" onClick={() => onClickBook(b.id)}>{b.title}</div>
+      {loading ? (
+        <div className="booklist-loading">加载中...</div>
+      ) : (
+        <>
+          <div className="booklist-grid">
+            {books.map((b) => (
+              <div className="book-card" key={b.book_id}>
+                <div className="book-cover" style={{backgroundImage: `url(${b.icon})`}} onClick={() => onClickBook(b.book_id)} />
+                <div className="book-title" onClick={() => onClickBook(b.book_id)}>{b.title}</div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      <div className="booklist-pager">
-        <button onClick={()=>goPage(page-1)} disabled={page<=1}>上一页</button>
-        <span>{page} / {totalPages}</span>
-        <button onClick={()=>goPage(page+1)} disabled={page>=totalPages}>下一页</button>
-      </div>
+          <div className="booklist-pager">
+            <button onClick={()=>goPage(page-1)} disabled={page<=1}>上一页</button>
+            <span>{page}</span>
+            <button onClick={()=>goPage(page+1)} disabled={books.length < PAGE_SIZE}>下一页</button>
+          </div>
+        </>
+      )}
     </div>
   );
 };
