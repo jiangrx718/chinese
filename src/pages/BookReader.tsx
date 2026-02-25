@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import '../styles/Reader.css';
 
 import type { PageItem as DataPageItem } from '../utils/bookData';
@@ -29,7 +30,9 @@ const importAllForBook = (bookId?: string): PageItem[] => {
   return images;
 };
 
-const BookReader: React.FC<{ bookId?: string }> = ({ bookId }) => {
+const BookReader: React.FC = () => {
+  const { id } = useParams();
+  const bookId = id ? decodeURIComponent(id) : undefined;
   const pages = importAllForBook(bookId);
   const [index, setIndex] = useState(0);
   const [autoPlay, setAutoPlay] = useState(true);

@@ -60,6 +60,7 @@ const BookList: React.FC = () => {
       if (data.code === 0) {
         setBooks(data.data.list);
         setTotalCount(data.data.count);
+        sessionStorage.setItem('booksList', JSON.stringify(data.data.list));
       }
     } catch (error) {
       console.error('Failed to fetch books:', error);
