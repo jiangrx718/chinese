@@ -40,6 +40,17 @@
 .reader-info { font-size: 14px; }
 .reader-actions { position: absolute; top: 18px; right: 18px; }
 .reader-empty { color: #fff; padding: 20px; }
+.reader-back-btn {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
 
 /* On narrow portrait devices rotate the reader to appear landscape */
 @media (max-width: 900px) {

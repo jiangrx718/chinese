@@ -1,110 +1,118 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import '../styles/Reader.css';
 
-import type { PageItem as DataPageItem } from '../utils/bookData';
-type PageItem = {
-  image?: string;
-  audio?: string;
-  path?: string;
-};
+interface BookPage {
+  position: number;
+  pic: string;
+  mp3: string;
+}
 
-// preload all assets under 10846 (including subfolders)
-const modules = import.meta.glob('/10846/**/*.{jpg,png,jpeg,webp,mp3}', { eager: true });
-
-const importAllForBook = (bookId?: string): PageItem[] => {
-  const images: PageItem[] = [];
-  Object.keys(modules).forEach((k) => {
-    const m: any = (modules as any)[k];
-    const url = m && m.default ? m.default : undefined;
-    if (!url) return;
-    if (bookId) {
-      if (!k.includes(`/${bookId}/`)) return;
-    }
-    const ext = k.split('.').pop()!.toLowerCase();
-    if (['jpg','jpeg','png','webp'].includes(ext)) {
-      images.push({ image: url, path: k });
-    }
-  });
-  images.sort((a,b)=> (a.path||'').localeCompare(b.path||'', undefined, {numeric:true}));
-  return images;
-};
+interface BookPagesResponse {
+  code: number;
+  msg: string;
+  data: {
+    count: number;
+    list: BookPage[];
+  };
+}
 
 const BookReader: React.FC = () => {
   const { id } = useParams();
-  const bookId = id ? decodeURIComponent(id) : undefined;
-  const pages = importAllForBook(bookId);
-  const [index, setIndex] = useState(0);
+  const navigate = useNavigate();
+  const bookId = id ? decodeURIComponent(id) : '';
+  const [pages, setPages] = useState<BookPage[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
   const [autoPlay, setAutoPlay] = useState(true);
-  const [rotated, setRotated] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
-    // when component mounts, start playing first page if exists
-    playFor(index);
-    // handle rotation/landscape-on-mobile requirement
-    const updateRotate = () => {
-      const isPortrait = window.innerWidth < window.innerHeight;
-      setRotated(isPortrait);
-      if (isPortrait) {
-        document.body.style.overflow = 'hidden';
+    if (bookId) {
+      fetchBookPages(bookId);
+    }
+  }, [bookId]);
+
+  const fetchBookPages = async (id: string) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`http://wechat.58haha.com/api/info/list?book_id=${id}`);
+      const result: BookPagesResponse = await response.json();
+
+      if (result.code === 0 && result.data.list) {
+        setPages(result.data.list);
+        setLoading(false);
       } else {
-        document.body.style.overflow = '';
+        console.error('Failed to fetch book pages:', result.msg);
+        setLoading(false);
       }
-    };
-    updateRotate();
-    window.addEventListener('resize', updateRotate);
-    window.addEventListener('orientationchange', updateRotate);
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-      document.body.style.overflow = '';
-      window.removeEventListener('resize', updateRotate);
-      window.removeEventListener('orientationchange', updateRotate);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    } catch (error) {
+      console.error('Failed to fetch book pages:', error);
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // when index changes by any means, play its audio
-    playFor(index);
+    playFor(currentIndex);
+    return () => {
+      if (audioRef.current) {
+        try {
+          audioRef.current.onended = null;
+          audioRef.current.pause();
+        } catch (e) {}
+        audioRef.current = null;
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index]);
+  }, [currentIndex]);
 
-  const playFor = (i: number) => {
-    if (i < 0 || i >= pages.length) return;
+  const playFor = (index: number) => {
+    if (index < 0 || index >= pages.length) return;
+
     if (audioRef.current) {
-      try { audioRef.current.onended = null; audioRef.current.pause(); } catch (e) {}
+      try {
+        audioRef.current.onended = null;
+        audioRef.current.pause();
+      } catch (e) {}
       audioRef.current = null;
     }
-    const src = pages[i].audio;
-    if (src) {
-      const a = new Audio(src);
-      audioRef.current = a;
-      a.play().catch(() => {});
-      a.onended = () => {
+
+    const mp3Url = pages[index].mp3;
+    if (mp3Url) {
+      const audio = new Audio(mp3Url);
+      audioRef.current = audio;
+      audio.play().catch(() => {});
+
+      audio.onended = () => {
         if (autoPlay) {
-          goTo(i + 1);
+          // 如果是最后一页，读完后返回 BookDetail 页面
+          if (currentIndex === pages.length - 1) {
+            navigate(-1);
+          } else {
+            goTo(index + 1);
+          }
         }
       };
     }
   };
 
-  const goTo = (i: number) => {
-    if (i < 0) i = 0;
-    if (i >= pages.length) i = pages.length - 1;
-    setIndex(i);
+  const goTo = (index: number) => {
+    if (index < 0) index = 0;
+    if (index >= pages.length) index = pages.length - 1;
+    setCurrentIndex(index);
   };
 
   const onNext = () => {
-    goTo(index + 1);
+    if (currentIndex === pages.length - 1) {
+      navigate(-1);
+    } else {
+      goTo(currentIndex + 1);
+    }
   };
 
   const onPrev = () => {
-    goTo(index - 1);
+    goTo(currentIndex - 1);
   };
 
   const onToggleAuto = () => {
@@ -123,19 +131,33 @@ const BookReader: React.FC = () => {
     if (dx < 0) onNext(); else onPrev();
   };
 
-  if (pages.length === 0) {
-    return <div className="reader-empty">未发现 10846 目录下的图片资源</div>;
+  const handleBack = () => {
+    navigate(-1);
+  };
+
+  if (loading) {
+    return <div className="reader-empty">加载中...</div>;
   }
 
+  if (pages.length === 0) {
+    return <div className="reader-empty">暂无内容</div>;
+  }
+
+  const currentPage = pages[currentIndex];
+
   return (
-    <div className={`reader-root ${rotated ? 'landscape-rotated' : ''}`} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+    <div className="reader-root" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+      <button className="reader-back-btn" onClick={handleBack}>
+        返回
+      </button>
+
       <div className="reader-stage">
-        <img src={pages[index].image} alt={`page-${index + 1}`} className="reader-image" />
+        <img src={currentPage.pic} alt={`page-${currentPage.position}`} className="reader-image" />
       </div>
 
       <div className="reader-controls">
         <button className="reader-btn" onClick={onPrev}>上一页</button>
-        <div className="reader-info">{index + 1} / {pages.length}</div>
+        <div className="reader-info">{currentIndex + 1} / {pages.length}</div>
         <button className="reader-btn" onClick={onNext}>下一页</button>
       </div>
 
