@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { SyncOutlined, ExperimentOutlined, FundViewOutlined } from '@ant-design/icons';
+import { SyncOutlined } from '@ant-design/icons';
 
 const SideMenu: React.FC = () => {
   const navigate = useNavigate();
