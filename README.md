@@ -113,13 +113,13 @@ docker buildx build \
 ### 保存镜像
 
 ```bash
-docker save -o /Users/jiang/docker-images/chinese-page-1.0.0-amd64.tar chinese-page:1.0.0-amd64
+docker save -o /Users/jiang/jiangrx816/docker-images/chinese-page-1.0.0-amd64.tar chinese-page:1.0.0-amd64
 ```
 
 ### 上传到服务器
 
 ```bash
-scp /Users/jiang/docker-images/chinese-page-1.0.0-amd64.tar root@182.92.84.106:/data/project/chinese
+scp /Users/jiang/jiangrx816/docker-images/chinese-page-1.0.0-amd64.tar root@182.92.84.106:/data/project/chinese
 ```
 
 ### 服务器加载并运行
