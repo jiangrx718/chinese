@@ -5,7 +5,7 @@ import '../styles/BookList.css';
 const PAGE_SIZE = 15;
 
 interface Category {
-  category_id: number;
+  category_id: string;
   name: string;
 }
 
@@ -27,7 +27,7 @@ const BookList: React.FC = () => {
   const [books, setBooks] = useState<Book[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
-  const [filter, setFilter] = useState<number | 'all'>('all');
+  const [filter, setFilter] = useState<string | 'all'>('all');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -40,7 +40,7 @@ const BookList: React.FC = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch('http://wechat.58haha.com/api/book/list?type=1');
+      const res = await fetch('http://wechat.58haha.com/api/book/category?type=chinese');
       const data: ApiResponse<{ count: number; list: Category[] }> = await res.json();
       if (data.code === 0) {
         setCategories(data.data.list);
@@ -53,9 +53,11 @@ const BookList: React.FC = () => {
   const fetchBooks = async () => {
     setLoading(true);
     try {
-      const type = filter === 'all' ? 0 : filter;
       const offset = (page - 1) * PAGE_SIZE;
-      const res = await fetch(`http://wechat.58haha.com/api/picture/list?type=${type}&limit=${PAGE_SIZE}&offset=${offset}`);
+      const url = filter === 'all'
+        ? `http://wechat.58haha.com/api/picture/list?limit=${PAGE_SIZE}&offset=${offset}`
+        : `http://wechat.58haha.com/api/picture/list?category_id=${filter}&limit=${PAGE_SIZE}&offset=${offset}`;
+      const res = await fetch(url);
       const data: ApiResponse<{ count: number; list: Book[] }> = await res.json();
       if (data.code === 0) {
         setBooks(data.data.list);
@@ -87,7 +89,7 @@ const BookList: React.FC = () => {
     if (value === 'all') {
       setFilter('all');
     } else {
-      setFilter(parseInt(value, 10));
+      setFilter(value);
     }
     setPage(1);
   };
@@ -100,7 +102,7 @@ const BookList: React.FC = () => {
           <select value={filter} onChange={handleFilterChange}>
             <option value="all">全部</option>
             {categories.map((c) => (
-              <option key={c.category_id} value={c.category_id.toString()}>{c.name}</option>
+              <option key={c.category_id} value={c.category_id}>{c.name}</option>
             ))}
           </select>
         </div>
