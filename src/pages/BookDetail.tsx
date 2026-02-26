@@ -15,6 +15,33 @@ const BookDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // 移除父容器的 margin 和 padding
+    const appContent = document.querySelector('.app-content');
+    if (appContent) {
+      (appContent as HTMLElement).style.margin = '0';
+      (appContent as HTMLElement).style.padding = '0';
+      (appContent as HTMLElement).style.background = 'transparent';
+      (appContent as HTMLElement).style.maxWidth = 'none';
+      (appContent as HTMLElement).style.minHeight = '100vh';
+      (appContent as HTMLElement).style.borderRadius = '0';
+      (appContent as HTMLElement).style.boxShadow = 'none';
+    }
+
+    // 组件卸载时恢复样式
+    return () => {
+      if (appContent) {
+        (appContent as HTMLElement).style.margin = '';
+        (appContent as HTMLElement).style.padding = '';
+        (appContent as HTMLElement).style.background = '';
+        (appContent as HTMLElement).style.maxWidth = '';
+        (appContent as HTMLElement).style.minHeight = '';
+        (appContent as HTMLElement).style.borderRadius = '';
+        (appContent as HTMLElement).style.boxShadow = '';
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     if (!id) return;
     fetchBookDetail(decodeURIComponent(id));
   }, [id]);
