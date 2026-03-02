@@ -25,6 +25,7 @@ const BookReader: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [autoPlay, setAutoPlay] = useState(true);
+  const [rotated, setRotated] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const touchStartX = useRef<number | null>(null);
 
@@ -33,6 +34,53 @@ const BookReader: React.FC = () => {
       fetchBookPages(bookId);
     }
   }, [bookId]);
+
+  useEffect(() => {
+    type MQL = MediaQueryList & {
+      addListener?: (listener: (this: MediaQueryList, ev: MediaQueryListEvent) => void) => void;
+      removeListener?: (listener: (this: MediaQueryList, ev: MediaQueryListEvent) => void) => void;
+    };
+    const mm = window.matchMedia('(orientation: portrait)') as MQL;
+    const update = () => {
+      setRotated(mm.matches);
+    };
+    update();
+    if (typeof mm.addEventListener === 'function') {
+      mm.addEventListener('change', update);
+    } else if (typeof mm.addListener === 'function') {
+      mm.addListener(update);
+    }
+    const lock = async () => {
+      try {
+        type ScreenOrientationLike = {
+          lock?: (orientation: 'landscape' | 'portrait' | 'landscape-primary' | 'landscape-secondary' | 'portrait-primary' | 'portrait-secondary') => Promise<void>;
+          unlock?: () => void;
+        };
+        const o = (screen as Screen & { orientation?: unknown }).orientation as ScreenOrientationLike | undefined;
+        await o?.lock?.('landscape');
+      } catch (err) {
+        console.warn('orientation lock failed', err);
+      }
+    };
+    lock();
+    return () => {
+      try {
+        type ScreenOrientationLike = {
+          lock?: (orientation: 'landscape' | 'portrait' | 'landscape-primary' | 'landscape-secondary' | 'portrait-primary' | 'portrait-secondary') => Promise<void>;
+          unlock?: () => void;
+        };
+        const o = (screen as Screen & { orientation?: unknown }).orientation as ScreenOrientationLike | undefined;
+        o?.unlock?.();
+      } catch (err) {
+        console.warn('orientation unlock failed', err);
+      }
+      if (typeof mm.removeEventListener === 'function') {
+        mm.removeEventListener('change', update);
+      } else if (typeof mm.removeListener === 'function') {
+        mm.removeListener(update);
+      }
+    };
+  }, []);
 
   const fetchBookPages = async (id: string) => {
     setLoading(true);
@@ -71,7 +119,9 @@ const BookReader: React.FC = () => {
         try {
           audioRef.current.onended = null;
           audioRef.current.pause();
-        } catch (e) {}
+        } catch {
+          void 0;
+        }
         audioRef.current = null;
       }
     };
@@ -85,7 +135,9 @@ const BookReader: React.FC = () => {
       try {
         audioRef.current.onended = null;
         audioRef.current.pause();
-      } catch (e) {}
+      } catch {
+        void 0;
+      }
       audioRef.current = null;
     }
 
@@ -157,7 +209,7 @@ const BookReader: React.FC = () => {
   const currentPage = pages[currentIndex];
 
   return (
-    <div className="reader-root" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+    <div className={`reader-root ${rotated ? 'landscape-rotated' : ''}`} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
       <button className="reader-back-btn" onClick={handleBack}>
         返回
       </button>
