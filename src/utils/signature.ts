@@ -1,4 +1,5 @@
 import { API_SIGN_SECRET } from '../config';
+import sha256 from 'js-sha256';
 
 function toHex(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
@@ -39,16 +40,22 @@ function randomNonce(): string {
 }
 
 async function hmacSHA256Hex(secret: string, data: string): Promise<string> {
-  const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    'raw',
-    enc.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
-  );
-  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(data));
-  return toHex(sig).toLowerCase();
+  try {
+    if (typeof crypto !== 'undefined' && (crypto as any).subtle) {
+      const enc = new TextEncoder();
+      const key = await (crypto as any).subtle.importKey(
+        'raw',
+        enc.encode(secret),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign']
+      );
+      const sig = await (crypto as any).subtle.sign('HMAC', key, enc.encode(data));
+      return toHex(sig).toLowerCase();
+    }
+  } catch {}
+  const hex = (sha256 as any).hmac(secret, data) as string;
+  return String(hex).toLowerCase();
 }
 
 export interface SignOptions {
