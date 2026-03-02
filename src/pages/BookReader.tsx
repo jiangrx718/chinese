@@ -114,11 +114,8 @@ const BookReader: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pages]);
 
+  // 卸载时清理音频
   useEffect(() => {
-    // 页面索引变化时播放音频（但初始加载时跳过，避免重复播放）
-    if (pages.length > 0 && currentIndex > 0) {
-      playFor(currentIndex);
-    }
     return () => {
       if (audioRef.current) {
         try {
@@ -130,8 +127,7 @@ const BookReader: React.FC = () => {
         audioRef.current = null;
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentIndex]);
+  }, []);
 
   const playFor = (index: number) => {
     if (index < 0 || index >= pages.length) return;
@@ -169,6 +165,8 @@ const BookReader: React.FC = () => {
     if (index < 0) index = 0;
     if (index >= pages.length) index = pages.length - 1;
     setCurrentIndex(index);
+    // 在用户手势环境中直接触发播放，避免浏览器的自动播放限制
+    playFor(index);
   };
 
   const onNext = () => {
