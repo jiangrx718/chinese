@@ -43,6 +43,9 @@ export async function apiFetch(url: string, options: RequestOptions = {}): Promi
     });
     const signHeaders = await buildSignatureHeaders({ method, path, query });
     Object.assign(headers, signHeaders);
+    if (!headers['X-Signature']) {
+      throw new Error('Missing API_SIGN_SECRET or signature generation failed');
+    }
   }
   return fetch(u.toString(), {
     method,

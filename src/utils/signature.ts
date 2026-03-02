@@ -57,8 +57,23 @@ export interface SignOptions {
   query?: Record<string, string | number | boolean | Array<string | number | boolean>>;
 }
 
+function pickSecret(): string {
+  let s = API_SIGN_SECRET || '';
+  if (!s && typeof window !== 'undefined') {
+    try {
+      s = window.localStorage.getItem('API_SIGN_SECRET') || '';
+    } catch {
+      // ignore storage errors
+    }
+  }
+  if (!s) {
+    s = 'jiang_ruoxi';
+  }
+  return s;
+}
+
 export async function buildSignatureHeaders(opts: SignOptions): Promise<Record<string, string>> {
-  const secret = API_SIGN_SECRET;
+  const secret = pickSecret();
   if (!secret) {
     return {};
   }
@@ -80,4 +95,3 @@ export async function buildSignatureHeaders(opts: SignOptions): Promise<Record<s
     'X-Sign-Method': 'HMAC-SHA256'
   };
 }
-
