@@ -54,7 +54,18 @@ const BookReader: React.FC = () => {
   };
 
   useEffect(() => {
-    playFor(currentIndex);
+    // 页面数据加载完成后，播放第一页音频
+    if (pages.length > 0) {
+      playFor(currentIndex);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pages]);
+
+  useEffect(() => {
+    // 页面索引变化时播放音频（但初始加载时跳过，避免重复播放）
+    if (pages.length > 0 && currentIndex > 0) {
+      playFor(currentIndex);
+    }
     return () => {
       if (audioRef.current) {
         try {
