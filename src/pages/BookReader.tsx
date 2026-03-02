@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import '../styles/Reader.css';
+import { apiFetch } from '../utils/http';
+import { API_BASE_URL } from '../config';
 
 interface BookPage {
   position: number;
@@ -85,7 +87,10 @@ const BookReader: React.FC = () => {
   const fetchBookPages = async (id: string) => {
     setLoading(true);
     try {
-      const response = await fetch(`http://wechat.58haha.com/api/info/list?book_id=${id}`);
+      const response = await apiFetch(`${API_BASE_URL}/api/info/list`, {
+        method: 'GET',
+        params: { book_id: id },
+      });
       const result: BookPagesResponse = await response.json();
 
       if (result.code === 0 && result.data.list) {

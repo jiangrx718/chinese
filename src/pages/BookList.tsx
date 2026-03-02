@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/BookList.css';
+import { apiFetch } from '../utils/http';
+import { API_BASE_URL } from '../config';
 
 const PAGE_SIZE = 15;
 
@@ -40,7 +42,11 @@ const BookList: React.FC = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch('http://wechat.58haha.com/api/book/category?type=chinese');
+      const res = await apiFetch(`${API_BASE_URL}/api/book/category`, {
+        method: 'GET',
+        params: { type: 'chinese' },
+        sign: true,
+      });
       const data: ApiResponse<{ count: number; list: Category[] }> = await res.json();
       if (data.code === 0) {
         setCategories(data.data.list);
@@ -54,10 +60,14 @@ const BookList: React.FC = () => {
     setLoading(true);
     try {
       const offset = (page - 1) * PAGE_SIZE;
-      const url = filter === 'all'
-        ? `http://wechat.58haha.com/api/picture/list?limit=${PAGE_SIZE}&offset=${offset}`
-        : `http://wechat.58haha.com/api/picture/list?category_id=${filter}&limit=${PAGE_SIZE}&offset=${offset}`;
-      const res = await fetch(url);
+      const params: Record<string, string | number | boolean> = { limit: PAGE_SIZE, offset };
+      if (filter !== 'all') {
+        params.category_id = filter;
+      }
+      const res = await apiFetch(`${API_BASE_URL}/api/picture/list`, {
+        method: 'GET',
+        params,
+      });
       const data: ApiResponse<{ count: number; list: Book[] }> = await res.json();
       if (data.code === 0) {
         setBooks(data.data.list);
